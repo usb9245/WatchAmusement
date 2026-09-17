@@ -1,11 +1,10 @@
-package box.mon.amusement.watch.presentation
+package box.mon.amusement.watch
 
 import android.content.Context
 import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
-import androidx.lifecycle.lifecycleScope
 import java.io.InputStream
 import java.io.OutputStream
 import kotlinx.coroutines.CoroutineScope
@@ -18,14 +17,11 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.coroutineScope
 
 @Serializable
 data class CardInfo(
     val cardName: String,
-    val cardIDm: String,
-    val cardPMm: String
+    val cardIDm: String
 )
 
 @Serializable data class CardList(val cardListArray: List<CardInfo>)
@@ -69,11 +65,10 @@ class CardDataList(private val context: Context) {
         return list
     }
 
-    suspend fun addNewCardToList(name: String, idm : String, pmm : String) {
+    suspend fun addNewCardToList(name: String, idm : String) {
         val newCard = CardInfo(
             cardName = name,
-            cardIDm = idm,
-            cardPMm = pmm
+            cardIDm = idm
         )
 
         context.dataStore.updateData { cardList ->
@@ -81,9 +76,9 @@ class CardDataList(private val context: Context) {
         }
     }
 
-    public fun addNewCard(name: String, idm : String, pmm : String) {
+    public fun addNewCard(name: String, idm : String) {
         CoroutineScope(Dispatchers.IO).launch {
-            addNewCardToList(name, idm, pmm)
+            addNewCardToList(name, idm)
         }
     }
 
@@ -104,6 +99,35 @@ class CardDataList(private val context: Context) {
     public fun removeCard(index : Int) {
         CoroutineScope(Dispatchers.IO).launch {
             removeCardToList(index)
+        }
+    }
+
+    suspend fun modifyCardInfoFromList(index: Int, cardName: String, cardIDm: String) {
+        val list = getCardListFromFlow()
+
+        if (index in list.indices) {
+            val oldCardInfo = list[index]
+
+            val newCardInfo = CardInfo(
+                cardName = cardName.ifEmpty { oldCardInfo.cardName },
+                cardIDm = cardIDm.ifEmpty { oldCardInfo.cardIDm }
+            )
+
+            removeCardToList(index)
+
+            context.dataStore.updateData { cardList ->
+                cardList.copy(
+                    cardListArray = cardList.cardListArray.toMutableList().apply {
+                        add(index, newCardInfo)
+                    }
+                )
+            }
+        }
+    }
+
+    public fun modifyCardInfo(index: Int, cardName: String = "", cardIDm: String = "") {
+        CoroutineScope(Dispatchers.IO).launch {
+            modifyCardInfoFromList(index, cardName, cardIDm)
         }
     }
 }

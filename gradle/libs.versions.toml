@@ -9,6 +9,8 @@ composeUiTooling = "1.5.6"
 wearToolingPreview = "1.0.0"
 activityCompose = "1.8.0"
 coreSplashscreen = "1.2.0"
+material3 = "1.4.0"
+composeMaterial = "1.6.2"
 
 [libraries]
 play-services-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "playServicesWearable" }
@@ -25,6 +27,8 @@ compose-ui-tooling = { group = "androidx.wear.compose", name = "compose-ui-tooli
 wear-tooling-preview = { group = "androidx.wear", name = "wear-tooling-preview", version.ref = "wearToolingPreview" }
 activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashscreen" }
+material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
+compose-material = { group = "androidx.wear.compose", name = "compose-material", version.ref = "composeMaterial" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

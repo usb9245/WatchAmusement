@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">WatchAmusement</string>
-    <string name="hello_world">Hello, %1$s!</string>
+    <string name="felicaservicedesc">HCE-F(Felica) Emulation Service</string>
 </resources>

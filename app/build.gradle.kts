@@ -40,9 +40,11 @@ dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.activity.compose)
     implementation(libs.compose.foundation)
+    implementation(libs.compose.material)
     implementation(libs.compose.material3)
     implementation(libs.compose.ui.tooling)
     implementation(libs.core.splashscreen)
+    implementation(libs.material3)
     implementation(libs.play.services.wearable)
     implementation(libs.ui)
     implementation(libs.ui.graphics)
@@ -55,6 +57,9 @@ dependencies {
 
     implementation("androidx.datastore:datastore:1.2.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+
+    implementation("androidx.wear:wear-input:1.2.0")
+    implementation("androidx.wear.compose:compose-foundation:1.6.2")
     /*
     val nav_version = "2.9.8"
     implementation("androidx.navigation:navigation-compose:$nav_version")

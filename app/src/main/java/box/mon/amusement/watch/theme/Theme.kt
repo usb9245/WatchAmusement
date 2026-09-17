@@ -1,4 +1,4 @@
-package box.mon.amusement.watch.presentation.theme
+package box.mon.amusement.watch.theme
 
 import androidx.compose.runtime.Composable
 import androidx.wear.compose.material3.MaterialTheme

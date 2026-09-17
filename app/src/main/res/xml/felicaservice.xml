@@ -1,0 +1,6 @@
+<host-nfcf-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/felicaservicedesc">
+    <system-code-filter android:name="4000"/>
+    <nfcid2-filter android:name="02FE000000000000"/>
+    <t3tPmm-filter android:name="0118002147483647"/>
+</host-nfcf-service>
