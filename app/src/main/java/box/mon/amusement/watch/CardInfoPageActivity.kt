@@ -20,13 +20,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material.dialog.Alert
+import androidx.wear.compose.material.dialog.Dialog
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
@@ -56,7 +56,6 @@ class CardInfoPageActivity : ComponentActivity() {
                 .collectAsState(initial = emptyList())
 
             if (cardIndex in cardListArray.indices) {
-
                 val showingCard = cardListArray[cardIndex]
 
                 CardInfoPage(
@@ -120,6 +119,53 @@ fun CardInfoPage(
         }
 
         launcher.launch(intent)
+    }
+
+    var isRequestedConfirm by remember { mutableStateOf(false) }
+    var confirmMessage by remember { mutableStateOf("") }
+    var confirmCommand by remember { mutableStateOf({ }) }
+
+    @Composable
+    fun confirmDialog() {
+        Dialog (
+            showDialog = true,
+            onDismissRequest = { isRequestedConfirm = false }
+        ) {
+            Alert(
+                title = { Text(confirmMessage) },
+                negativeButton = {
+                    Button(
+                        onClick = { isRequestedConfirm = false },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    ) {
+                        Text("No")
+                    }
+                },
+                positiveButton = {
+                    Button(
+                        onClick = {
+                            isRequestedConfirm = false
+                            confirmCommand()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    ) {
+                        Text("Yes")
+                    }
+                }
+            )
+        }
+    }
+
+    fun requestConfirm(msg: String = "", cmd: () -> Unit) {
+        confirmMessage = msg
+        confirmCommand = cmd
+        isRequestedConfirm = true
     }
 
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
@@ -284,12 +330,11 @@ fun CardInfoPage(
                                     toastMessage("Stop card first before change!")
                                 }
                                 else {
-                                    // todo: 변경 확인 y/n창 추가
-                                    // 카드 번호 랜덤 생성
-                                    val rnID =
-                                        UUID.randomUUID().toString().replace("-", "").take(12)
-                                            .uppercase()
-                                    cardList.modifyCardInfo(index, cardIDm = "02FE${rnID}")
+                                    requestConfirm("Change Card Number?") {
+                                        // 카드 번호 랜덤 생성
+                                        val rnID = UUID.randomUUID().toString().replace("-", "").take(12).uppercase()
+                                        cardList.modifyCardInfo(index, cardIDm = "02FE${rnID}")
+                                    }
                                 }
                             },
                             modifier = Modifier
@@ -307,9 +352,10 @@ fun CardInfoPage(
                                     toastMessage("Stop card first before remove!")
                                 }
                                 else {
-                                    // todo: 삭제 확인 y/n창 추가
-                                    cardList.removeCard(index)
-                                    goHome()
+                                    requestConfirm("Remove Card?") {
+                                        cardList.removeCard(index)
+                                        goHome()
+                                    }
                                 }
                             },
                             modifier = Modifier
@@ -334,6 +380,10 @@ fun CardInfoPage(
                     }
                 }
             }
+        }
+
+        if(isRequestedConfirm) {
+            confirmDialog()
         }
     }
 }
