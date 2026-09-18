@@ -7,7 +7,7 @@
 
     <application
         android:allowBackup="true"
-        android:fullBackupContent="@xml/backuprules"
+        android:dataExtractionRules="@xml/backuprules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"

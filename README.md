@@ -3,7 +3,7 @@ Android 기반 Wear OS 기기에서 HCE-F를 통해 FeliCa 카드를 에뮬레�
 
 ## 작동에 필요한 요구사항
 * Wear OS를 구동하는 기기
-  * Wear OS 3(Android 11) 이상
+  * Wear OS 5.1(Android 15) 이상
   * NFC 및 HCE-F 지원
 * adb로 워치에 앱을 설치할 수 있는 지식
 

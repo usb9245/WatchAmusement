@@ -20,11 +20,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
+import androidx.wear.compose.material.dialog.Alert
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
@@ -47,7 +49,6 @@ class CardInfoPageActivity : ComponentActivity() {
         val cardIndex = intent.getIntExtra("cardIndex", -1)
 
         val cardList = CardDataList(this)
-        //val cardListArray = cardList.getCardList()
 
         setContent {
             val cardListArray by cardList
@@ -98,7 +99,31 @@ fun CardInfoPage(
         }
     }
 
+    fun inputForm(msg: String = "", cmd: (String) -> Unit) {
+        val remoteInputs: List<RemoteInput> = listOf(
+            RemoteInput.Builder("inputForm")
+                .setLabel(msg).build()
+        )
+        val intent: Intent = createActionRemoteInputIntent()
+        putRemoteInputsExtra(intent, remoteInputs)
+
+        val launcher = activity.activityResultRegistry.register(
+            "remoteInput",
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            val inputValue = RemoteInput
+                .getResultsFromIntent(result.data)
+                ?.getCharSequence("inputForm")
+                .toString()
+
+                cmd(inputValue)
+        }
+
+        launcher.launch(intent)
+    }
+
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        nfcAdapter?.resetDiscoveryTechnology(activity)
         isRunningNFC = false
     }
 
@@ -111,9 +136,7 @@ fun CardInfoPage(
                 edgeButton = {
                     EdgeButton(
                         onClick = {
-                            if(isRunningNFC) {
-                                felicaServiceInstance?.disableService(activity)
-                            }
+                            nfcAdapter?.resetDiscoveryTechnology(activity)
                             goHome()
                         },
                         colors =
@@ -157,6 +180,12 @@ fun CardInfoPage(
                                     onClick = {
                                         isRunningNFC = true
                                         resume()
+                                        // 교통카드 등 활성화된 상태더라도 FeliCa만 인식되게끔 하기
+                                        nfcAdapter.setDiscoveryTechnology(
+                                            activity,
+                                            NfcAdapter.FLAG_READER_NFC_F,
+                                            NfcAdapter.FLAG_LISTEN_NFC_PASSIVE_F
+                                        )
                                         felicaServiceInstance?.setNfcid2ForService(serviceIntent, idm)
                                         felicaServiceInstance?.enableService(activity, serviceIntent)
                                     },
@@ -174,6 +203,7 @@ fun CardInfoPage(
                                 Button(
                                     onClick = {
                                         isRunningNFC = false
+                                        nfcAdapter.resetDiscoveryTechnology(activity)
                                         felicaServiceInstance?.disableService(activity)
                                     },
                                     modifier = Modifier
@@ -234,27 +264,9 @@ fun CardInfoPage(
                                     toastMessage("Stop card first before change!")
                                 }
                                 else {
-                                    val remoteInputs: List<RemoteInput> = listOf(
-                                        RemoteInput.Builder("newCardName")
-                                            .setLabel("Input new card name here").build()
-                                    )
-                                    val intent: Intent = createActionRemoteInputIntent()
-                                    putRemoteInputsExtra(intent, remoteInputs)
-
-                                    val launcher = activity.activityResultRegistry.register(
-                                        "remoteInput",
-                                        ActivityResultContracts.StartActivityForResult()
-                                    ) { result ->
-                                        val newCardName = RemoteInput
-                                            .getResultsFromIntent(result.data)
-                                            ?.getCharSequence("newCardName")
-                                            ?.toString()
-
-                                        if (newCardName != null)
-                                            cardList.modifyCardInfo(index, cardName = newCardName)
+                                    inputForm("Input new card name here") { newCardName ->
+                                        cardList.modifyCardInfo(index, cardName = newCardName)
                                     }
-
-                                    launcher.launch(intent)
                                 }
                             },
                             modifier = Modifier
@@ -317,7 +329,7 @@ fun CardInfoPage(
                                     .transformedHeight(this, transformationSpec),
                             transformation = SurfaceTransformation(transformationSpec),
                         ) {
-                            Text(text = "IDm: ${idm}")
+                            Text(text = "IDm: $idm")
                         }
                     }
                 }
