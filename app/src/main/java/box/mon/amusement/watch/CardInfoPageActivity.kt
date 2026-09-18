@@ -21,6 +21,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.AppScaffold
@@ -81,13 +83,24 @@ fun CardInfoPage(
     activity: CardInfoPageActivity
 ) {
     val context = LocalContext.current
-    var running by remember { mutableStateOf(false) }
+    var isRunningNFC by remember { mutableStateOf(false) }
 
     val nfcAdapter = NfcAdapter.getDefaultAdapter(activity)
     val isNfcAvailable: Boolean = (nfcAdapter != null)
 
-    val felicaService = if(isNfcAvailable) NfcFCardEmulation.getInstance(nfcAdapter) else null
+    val felicaServiceInstance = if(isNfcAvailable) NfcFCardEmulation.getInstance(nfcAdapter) else null
     val serviceIntent = ComponentName(activity, FeliCaService::class.java)
+
+    fun toastMessage(msg: String = "") {
+        if(msg.isEmpty().not()) {
+            val toast = Toast.makeText(context, msg, Toast.LENGTH_SHORT)
+            toast.show()
+        }
+    }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        isRunningNFC = false
+    }
 
     WatchAmusementTheme {
         AppScaffold {
@@ -97,7 +110,12 @@ fun CardInfoPage(
                 scrollState = listState,
                 edgeButton = {
                     EdgeButton(
-                        onClick = { goHome() },
+                        onClick = {
+                            if(isRunningNFC) {
+                                felicaServiceInstance?.disableService(activity)
+                            }
+                            goHome()
+                        },
                         colors =
                             ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -133,14 +151,14 @@ fun CardInfoPage(
                     }
 
                     if(isNfcAvailable) {
-                        if (running == false) {
+                        if (isRunningNFC.not()) {
                             item {
                                 Button(
                                     onClick = {
-                                        running = true
+                                        isRunningNFC = true
                                         resume()
-                                        felicaService?.setNfcid2ForService(serviceIntent, idm)
-                                        felicaService?.enableService(activity, serviceIntent)
+                                        felicaServiceInstance?.setNfcid2ForService(serviceIntent, idm)
+                                        felicaServiceInstance?.enableService(activity, serviceIntent)
                                     },
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -150,12 +168,13 @@ fun CardInfoPage(
                                     Text("▶ Run HCE-F Card")
                                 }
                             }
-                        } else {
+                        }
+                        else {
                             item {
                                 Button(
                                     onClick = {
-                                        running = false
-                                        felicaService?.disableService(activity)
+                                        isRunningNFC = false
+                                        felicaServiceInstance?.disableService(activity)
                                     },
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -168,9 +187,7 @@ fun CardInfoPage(
                         }
                     }
                     else {
-                        val toastText = "NFC Not Available"
-                        val toast = Toast.makeText(context, toastText, Toast.LENGTH_SHORT)
-                        toast.show()
+                        toastMessage("NFC Not Available")
 
                         // 버튼 위치에 빈 공간
                         item {
@@ -213,26 +230,32 @@ fun CardInfoPage(
                     item {
                         Button(
                             onClick = {
-                                val remoteInputs: List<RemoteInput> = listOf(
-                                    RemoteInput.Builder("newCardName").setLabel("Input new card name here").build()
-                                )
-                                val intent: Intent = createActionRemoteInputIntent()
-                                putRemoteInputsExtra(intent, remoteInputs)
-
-                                val launcher = activity.activityResultRegistry.register(
-                                    "remoteInput",
-                                    ActivityResultContracts.StartActivityForResult()
-                                ) { result ->
-                                    val newCardName = RemoteInput
-                                        .getResultsFromIntent(result.data)
-                                        ?.getCharSequence("newCardName")
-                                        ?.toString()
-
-                                    if (newCardName != null)
-                                        cardList.modifyCardInfo(index, cardName = newCardName)
+                                if(isRunningNFC) {
+                                    toastMessage("Stop card first before change!")
                                 }
+                                else {
+                                    val remoteInputs: List<RemoteInput> = listOf(
+                                        RemoteInput.Builder("newCardName")
+                                            .setLabel("Input new card name here").build()
+                                    )
+                                    val intent: Intent = createActionRemoteInputIntent()
+                                    putRemoteInputsExtra(intent, remoteInputs)
 
-                                launcher.launch(intent)
+                                    val launcher = activity.activityResultRegistry.register(
+                                        "remoteInput",
+                                        ActivityResultContracts.StartActivityForResult()
+                                    ) { result ->
+                                        val newCardName = RemoteInput
+                                            .getResultsFromIntent(result.data)
+                                            ?.getCharSequence("newCardName")
+                                            ?.toString()
+
+                                        if (newCardName != null)
+                                            cardList.modifyCardInfo(index, cardName = newCardName)
+                                    }
+
+                                    launcher.launch(intent)
+                                }
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -245,10 +268,17 @@ fun CardInfoPage(
                     item {
                         Button(
                             onClick = {
-                                // todo: 변경 확인 y/n창 추가
-                                // 카드 번호 랜덤 생성
-                                val rnID = UUID.randomUUID().toString().replace("-", "").take(12).uppercase()
-                                cardList.modifyCardInfo(index, cardIDm = "02FE${rnID}")
+                                if(isRunningNFC) {
+                                    toastMessage("Stop card first before change!")
+                                }
+                                else {
+                                    // todo: 변경 확인 y/n창 추가
+                                    // 카드 번호 랜덤 생성
+                                    val rnID =
+                                        UUID.randomUUID().toString().replace("-", "").take(12)
+                                            .uppercase()
+                                    cardList.modifyCardInfo(index, cardIDm = "02FE${rnID}")
+                                }
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -261,9 +291,14 @@ fun CardInfoPage(
                     item {
                         Button(
                             onClick = {
-                                // todo: 삭제 확인 y/n창 추가
-                                cardList.removeCard(index)
-                                goHome()
+                                if(isRunningNFC) {
+                                    toastMessage("Stop card first before remove!")
+                                }
+                                else {
+                                    // todo: 삭제 확인 y/n창 추가
+                                    cardList.removeCard(index)
+                                    goHome()
+                                }
                             },
                             modifier = Modifier
                                 .fillMaxWidth()

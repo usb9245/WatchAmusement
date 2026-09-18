@@ -43,7 +43,7 @@ Source: https://raw.githubusercontent.com/Kotlin/kotlinx.coroutines/1.9.0/licens
 kotlinx.serialization library.
 Copyright 2017-2019 JetBrains s.r.o and respective authors and developers
 
-Source: https://raw.githubusercontent.com/Kotlin/kotlinx.serialization/v1.9.0/license/NOTICE.txt
+Source: https://raw.githubusercontent.com/Kotlin/kotlinx.serialization/v1.11.0/license/NOTICE.txt
 
 ## Apache License 2.0
 
