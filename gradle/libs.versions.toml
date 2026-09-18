@@ -1,19 +1,22 @@
 [versions]
 agp = "9.4.0"
-playServicesWearable = "18.0.0"
-kotlin = "2.2.10"
-composeBom = "2024.09.00"
-composeMaterial3 = "1.5.6"
-composeFoundation = "1.5.6"
-composeUiTooling = "1.5.6"
+kotlinxSerializationJson = "1.11.0"
+kotlin = "2.4.20"
+composeBom = "2026.09.00"
+composeMaterial3 = "1.6.2"
+composeFoundation = "1.6.2"
+composeUiTooling = "1.6.2"
+wearInput = "1.2.0"
 wearToolingPreview = "1.0.0"
-activityCompose = "1.8.0"
+activityCompose = "1.13.0"
 coreSplashscreen = "1.2.0"
 material3 = "1.4.0"
 composeMaterial = "1.6.2"
+datastore = "1.2.1"
 
 [libraries]
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 ui = { group = "androidx.compose.ui", name = "ui" }
 ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
@@ -23,11 +26,13 @@ ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 compose-material3 = { group = "androidx.wear.compose", name = "compose-material3", version.ref = "composeMaterial3" }
 compose-foundation = { group = "androidx.wear.compose", name = "compose-foundation", version.ref = "composeFoundation" }
 compose-ui-tooling = { group = "androidx.wear.compose", name = "compose-ui-tooling", version.ref = "composeUiTooling" }
+wear-input = { module = "androidx.wear:wear-input", version.ref = "wearInput" }
 wear-tooling-preview = { group = "androidx.wear", name = "wear-tooling-preview", version.ref = "wearToolingPreview" }
 activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashscreen" }
 material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 compose-material = { group = "androidx.wear.compose", name = "compose-material", version.ref = "composeMaterial" }
+datastore = { group = "androidx.datastore", name = "datastore", version.ref = "datastore" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
